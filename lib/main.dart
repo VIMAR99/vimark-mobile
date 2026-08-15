@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'auth_page.dart';
 
 void main() => runApp(const VimarkApp());
 
@@ -9,7 +10,7 @@ class VimarkApp extends StatelessWidget {
     title: 'VIMARK',
     debugShowCheckedModeBanner: false,
     theme: ThemeData(useMaterial3: true, colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF087F5B))),
-    home: const HomeShell(),
+    home: const AuthPage(),
   );
 }
 
