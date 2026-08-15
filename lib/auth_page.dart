@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'home_shell.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -62,7 +63,11 @@ class _AuthPageState extends State<AuthPage> {
             : 'Compte créé avec succès 🎉',
       );
 
-      Navigator.of(context).pop(result);
+      Navigator.of(context).pushReplacement(
+  MaterialPageRoute(
+    builder: (_) => const HomeShell(),
+  ),
+);
     } catch (e) {
       if (!mounted) return;
 
