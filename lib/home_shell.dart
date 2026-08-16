@@ -260,7 +260,7 @@ class _AccountPageState extends State<AccountPage> {
       body: RefreshIndicator(
         onRefresh: loadProfile,
         child: loading
-            ? const ListView(
+            ? ListView(
                 children: [
                   SizedBox(
                     height: 300,
