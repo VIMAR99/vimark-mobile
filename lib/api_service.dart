@@ -1,9 +1,25 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static const String baseUrl =
       'https://vimark-api-prod.onrender.com';
+
+  static Future<void> saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('vimark_token', token);
+  }
+
+  static Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('vimark_token');
+  }
+
+  static Future<void> clearToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('vimark_token');
+  }
 
   static Future<Map<String, dynamic>> health() async {
     final response = await http.get(
@@ -41,10 +57,15 @@ class ApiService {
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 201) {
+      if (data['token'] != null) {
+        await saveToken(data['token']);
+      }
       return data;
     }
 
-    throw Exception(data['error'] ?? 'Erreur lors de l inscription');
+    throw Exception(
+      data['error'] ?? 'Erreur lors de l inscription',
+    );
   }
 
   static Future<Map<String, dynamic>> login({
@@ -65,10 +86,40 @@ class ApiService {
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
+      if (data['token'] != null) {
+        await saveToken(data['token']);
+      }
       return data;
     }
 
-    throw Exception(data['error'] ?? 'Identifiants incorrects');
+    throw Exception(
+      data['error'] ?? 'Identifiants incorrects',
+    );
+  }
+
+  static Future<Map<String, dynamic>> getMe() async {
+    final token = await getToken();
+
+    if (token == null || token.isEmpty) {
+      throw Exception('Session utilisateur introuvable');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/me'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return data;
+    }
+
+    throw Exception(
+      data['error'] ?? 'Impossible de récupérer votre profil',
+    );
   }
 
   static Future<List<dynamic>> getCourses({
