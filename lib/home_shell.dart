@@ -217,13 +217,26 @@ class AccountPage extends StatefulWidget {
 
 class _AccountPageState extends State<AccountPage> {
   bool loading = true;
+  bool saving = false;
   String? error;
   Map<String, dynamic>? user;
+
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     loadProfile();
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    super.dispose();
   }
 
   Future<void> loadProfile() async {
@@ -239,6 +252,11 @@ class _AccountPageState extends State<AccountPage> {
 
       setState(() {
         user = data;
+
+        nameController.text = data['name']?.toString() ?? '';
+        emailController.text = data['email']?.toString() ?? '';
+        phoneController.text = data['phone']?.toString() ?? '';
+
         loading = false;
       });
     } catch (e) {
@@ -251,49 +269,89 @@ class _AccountPageState extends State<AccountPage> {
     }
   }
 
+  Future<void> saveProfile() async {
+    if (nameController.text.trim().isEmpty) {
+      showMessage('Le nom est requis.');
+      return;
+    }
+
+    setState(() => saving = true);
+
+    try {
+      final data = await ApiService.updateMe(
+        name: nameController.text.trim(),
+        email: emailController.text.trim().isEmpty
+            ? null
+            : emailController.text.trim(),
+        phone: phoneController.text.trim().isEmpty
+            ? null
+            : phoneController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        user = data;
+        saving = false;
+      });
+
+      showMessage('Profil mis à jour avec succès 🎉');
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() => saving = false);
+
+      showMessage(
+        e.toString().replaceFirst('Exception: ', ''),
+      );
+    }
+  }
+
+  void showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mon compte'),
       ),
-      body: RefreshIndicator(
-        onRefresh: loadProfile,
-        child: loading
-            ? ListView(
-                children: [
-                  SizedBox(
-                    height: 300,
-                    child: Center(
-                      child: CircularProgressIndicator(),
+      body: loading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : error != null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          size: 60,
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          error!,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 20),
+                        FilledButton.icon(
+                          onPressed: loadProfile,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Réessayer'),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              )
-            : error != null
-                ? ListView(
-                    padding: const EdgeInsets.all(24),
-                    children: [
-                      const SizedBox(height: 80),
-                      const Icon(
-                        Icons.error_outline,
-                        size: 60,
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        error!,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
-                      FilledButton.icon(
-                        onPressed: loadProfile,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Réessayer'),
-                      ),
-                    ],
-                  )
-                : ListView(
-                    padding: const EdgeInsets.all(20),
+                )
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
                     children: [
                       const SizedBox(height: 10),
 
@@ -307,26 +365,40 @@ class _AccountPageState extends State<AccountPage> {
 
                       const SizedBox(height: 24),
 
-                      ProfileInfoCard(
-                        icon: Icons.person_outline,
-                        title: 'Nom',
-                        value: user?['name']?.toString() ??
-                            'Non renseigné',
+                      TextField(
+                        controller: nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Nom',
+                          prefixIcon: Icon(Icons.person_outline),
+                          border: OutlineInputBorder(),
+                        ),
                       ),
 
-                      ProfileInfoCard(
-                        icon: Icons.email_outlined,
-                        title: 'Email',
-                        value: user?['email']?.toString() ??
-                            'Non renseigné',
+                      const SizedBox(height: 16),
+
+                      TextField(
+                        controller: emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          prefixIcon: Icon(Icons.email_outlined),
+                          border: OutlineInputBorder(),
+                        ),
                       ),
 
-                      ProfileInfoCard(
-                        icon: Icons.phone_outlined,
-                        title: 'Téléphone',
-                        value: user?['phone']?.toString() ??
-                            'Non renseigné',
+                      const SizedBox(height: 16),
+
+                      TextField(
+                        controller: phoneController,
+                        keyboardType: TextInputType.phone,
+                        decoration: const InputDecoration(
+                          labelText: 'Téléphone',
+                          prefixIcon: Icon(Icons.phone_outlined),
+                          border: OutlineInputBorder(),
+                        ),
                       ),
+
+                      const SizedBox(height: 16),
 
                       ProfileInfoCard(
                         icon: Icons.badge_outlined,
@@ -337,22 +409,29 @@ class _AccountPageState extends State<AccountPage> {
 
                       const SizedBox(height: 20),
 
-                      FilledButton.icon(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'La modification du profil sera disponible prochainement.',
-                              ),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.edit),
-                        label: const Text('Modifier mon profil'),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: saving ? null : saveProfile,
+                          icon: saving
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.save),
+                          label: Text(
+                            saving
+                                ? 'Enregistrement...'
+                                : 'Enregistrer les modifications',
+                          ),
+                        ),
                       ),
                     ],
                   ),
-      ),
+                ),
     );
   }
 }
