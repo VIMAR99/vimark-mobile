@@ -11,16 +11,16 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int index = 0;
 
-  final pages = const [
-    HomePage(),
-    EducationPage(),
-    ShopPage(),
-    OrdersPage(),
-    ProfilePage(),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final pages = [
+      const HomePage(),
+      const EducationPage(),
+      const ShopPage(),
+      const OrdersPage(),
+      const ProfilePage(),
+    ];
+
     return Scaffold(
       body: SafeArea(
         child: pages[index],
@@ -64,55 +64,86 @@ class _HomeShellState extends State<HomeShell> {
   }
 }
 
-/* =========================
+/* =========================================================
    ACCUEIL
-========================= */
+========================================================= */
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Page(
+    return AppPage(
       title: 'Bienvenue sur VIMARK',
       subtitle: 'Éducation, commerce et services réunis.',
       children: [
-        ActionCard(
-          icon: Icons.shopping_bag,
-          title: 'Marketplace',
-          text: 'Découvrez des produits et services.',
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'VIMARK',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Construisons votre réussite ensemble.',
+                ),
+                const SizedBox(height: 20),
+                FilledButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.rocket_launch),
+                  label: const Text('Découvrir VIMARK'),
+                ),
+              ],
+            ),
+          ),
         ),
+        const SizedBox(height: 20),
+        const SectionTitle(title: 'Accès rapide'),
         ActionCard(
           icon: Icons.school,
           title: 'Éducation',
-          text: 'Apprenez et développez vos compétences.',
+          text: 'Découvrez les cours disponibles.',
+          onTap: () {},
+        ),
+        ActionCard(
+          icon: Icons.storefront,
+          title: 'Marketplace',
+          text: 'Découvrez les produits disponibles.',
+          onTap: () {},
         ),
         ActionCard(
           icon: Icons.star,
-          title: 'Premium',
-          text: 'Découvrez les avantages VIMARK Premium.',
+          title: 'VIMARK Premium',
+          text: 'Découvrez les avantages Premium.',
+          onTap: () {},
         ),
       ],
     );
   }
 }
 
-/* =========================
+/* =========================================================
    EDUCATION
-========================= */
+========================================================= */
 
 class EducationPage extends StatefulWidget {
   const EducationPage({super.key});
 
   @override
-  State<EducationPage> createState() =>
-      _EducationPageState();
+  State<EducationPage> createState() => _EducationPageState();
 }
 
 class _EducationPageState extends State<EducationPage> {
   bool loading = true;
-  List<dynamic> courses = [];
   String? error;
+  List<dynamic> courses = [];
 
   @override
   void initState() {
@@ -121,6 +152,11 @@ class _EducationPageState extends State<EducationPage> {
   }
 
   Future<void> loadCourses() async {
+    setState(() {
+      loading = true;
+      error = null;
+    });
+
     try {
       final result = await ApiService.getCourses();
 
@@ -134,15 +170,15 @@ class _EducationPageState extends State<EducationPage> {
       if (!mounted) return;
 
       setState(() {
-        error = e.toString();
         loading = false;
+        error = e.toString().replaceFirst('Exception: ', '');
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Page(
+    return AppPage(
       title: 'Éducation',
       subtitle: 'Apprenez à votre rythme.',
       children: [
@@ -154,10 +190,9 @@ class _EducationPageState extends State<EducationPage> {
             ),
           )
         else if (error != null)
-          ActionCard(
-            icon: Icons.error_outline,
-            title: 'Erreur',
-            text: error!,
+          ErrorCard(
+            message: error!,
+            onRetry: loadCourses,
           )
         else if (courses.isEmpty)
           const ActionCard(
@@ -167,18 +202,16 @@ class _EducationPageState extends State<EducationPage> {
           )
         else
           ...courses.map(
-            (course) => CourseCard(
-              course: course,
-            ),
+            (course) => CourseCard(course: course),
           ),
       ],
     );
   }
 }
 
-/* =========================
+/* =========================================================
    BOUTIQUE
-========================= */
+========================================================= */
 
 class ShopPage extends StatefulWidget {
   const ShopPage({super.key});
@@ -189,8 +222,10 @@ class ShopPage extends StatefulWidget {
 
 class _ShopPageState extends State<ShopPage> {
   bool loading = true;
-  List<dynamic> products = [];
   String? error;
+  List<dynamic> products = [];
+
+  final searchController = TextEditingController();
 
   @override
   void initState() {
@@ -198,10 +233,22 @@ class _ShopPageState extends State<ShopPage> {
     loadProducts();
   }
 
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> loadProducts() async {
+    setState(() {
+      loading = true;
+      error = null;
+    });
+
     try {
-      final result =
-          await ApiService.getProducts();
+      final result = await ApiService.getProducts(
+        search: searchController.text.trim(),
+      );
 
       if (!mounted) return;
 
@@ -213,18 +260,32 @@ class _ShopPageState extends State<ShopPage> {
       if (!mounted) return;
 
       setState(() {
-        error = e.toString();
         loading = false;
+        error = e.toString().replaceFirst('Exception: ', '');
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Page(
+    return AppPage(
       title: 'Marketplace',
       subtitle: 'Trouvez ce dont vous avez besoin.',
       children: [
+        TextField(
+          controller: searchController,
+          onSubmitted: (_) => loadProducts(),
+          decoration: InputDecoration(
+            labelText: 'Rechercher un produit',
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: IconButton(
+              onPressed: loadProducts,
+              icon: const Icon(Icons.arrow_forward),
+            ),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 20),
         if (loading)
           const Center(
             child: Padding(
@@ -233,72 +294,63 @@ class _ShopPageState extends State<ShopPage> {
             ),
           )
         else if (error != null)
-          ActionCard(
-            icon: Icons.error_outline,
-            title: 'Erreur',
-            text: error!,
+          ErrorCard(
+            message: error!,
+            onRetry: loadProducts,
           )
         else if (products.isEmpty)
           const ActionCard(
             icon: Icons.shopping_bag_outlined,
             title: 'Aucun produit',
-            text:
-                'Les produits des commerçants apparaîtront ici.',
+            text: 'Les produits disponibles apparaîtront ici.',
           )
         else
           ...products.map(
-            (product) => MarketplaceProductCard(
-              product: product,
-            ),
+            (product) => ProductCard(product: product),
           ),
       ],
     );
   }
 }
 
-/* =========================
+/* =========================================================
    COMMANDES
-========================= */
+========================================================= */
 
 class OrdersPage extends StatelessWidget {
   const OrdersPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Page(
+    return const AppPage(
       title: 'Mes commandes',
       subtitle: 'Suivez vos achats.',
       children: [
         ActionCard(
           icon: Icons.inventory_2_outlined,
-          title: 'Aucune commande pour le moment',
-          text:
-              'Vos commandes apparaîtront ici.',
+          title: 'Aucune commande',
+          text: 'Vos commandes apparaîtront ici.',
         ),
       ],
     );
   }
 }
 
-/* =========================
+/* =========================================================
    PROFIL
-========================= */
+========================================================= */
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  State<ProfilePage> createState() =>
-      _ProfilePageState();
+  State<ProfilePage> createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
   bool loading = true;
-
-  String name = 'Utilisateur VIMARK';
-  String email = 'Votre adresse email';
-  String phone = 'Non renseigné';
-  String role = 'student';
+  String? error;
+  Map<String, dynamic>? user;
 
   @override
   void initState() {
@@ -307,31 +359,199 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> loadProfile() async {
+    setState(() {
+      loading = true;
+      error = null;
+    });
+
     try {
-      final user =
-          await ApiService.getMe();
+      final result = await ApiService.getMe();
 
       if (!mounted) return;
 
       setState(() {
-        name = user['name'] ?? name;
-        email = user['email'] ?? email;
-        phone = user['phone'] ?? phone;
-        role = user['role'] ?? role;
+        user = result;
         loading = false;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
 
       setState(() {
         loading = false;
+        error = e.toString().replaceFirst('Exception: ', '');
       });
     }
   }
 
+  Future<void> editProfile() async {
+    if (user == null) return;
+
+    final nameController = TextEditingController(
+      text: user!['name'] ?? '',
+    );
+
+    final emailController = TextEditingController(
+      text: user!['email'] ?? '',
+    );
+
+    final phoneController = TextEditingController(
+      text: user!['phone'] ?? '',
+    );
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Modifier mon profil'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nom',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: 'E-mail',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Téléphone',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                try {
+                  await ApiService.updateMe(
+                    name: nameController.text.trim(),
+                    email: emailController.text.trim().isEmpty
+                        ? null
+                        : emailController.text.trim(),
+                    phone: phoneController.text.trim().isEmpty
+                        ? null
+                        : phoneController.text.trim(),
+                  );
+
+                  if (!dialogContext.mounted) return;
+
+                  Navigator.pop(dialogContext, true);
+                } catch (e) {
+                  if (!dialogContext.mounted) return;
+
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        e.toString().replaceFirst(
+                              'Exception: ',
+                              '',
+                            ),
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Enregistrer'),
+            ),
+          ],
+        );
+      },
+    );
+
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+
+    if (result == true) {
+      await loadProfile();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profil mis à jour avec succès 🎉'),
+        ),
+      );
+    }
+  }
+
+  Future<void> openMerchantSpace() async {
+    if (user == null) return;
+
+    if (user!['role'] != 'merchant') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Votre compte doit avoir le rôle commerçant.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const MerchantPage(),
+      ),
+    );
+  }
+
+  Future<void> openPremium() async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const PremiumPage(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Page(
+    if (loading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (error != null) {
+      return AppPage(
+        title: 'Mon compte',
+        subtitle: 'Gérez votre espace VIMARK.',
+        children: [
+          ErrorCard(
+            message: error!,
+            onRetry: loadProfile,
+          ),
+        ],
+      );
+    }
+
+    final currentUser = user ?? {};
+
+    return AppPage(
       title: 'Mon compte',
       subtitle: 'Gérez votre espace VIMARK.',
       children: [
@@ -348,514 +568,147 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                if (loading)
-                  const CircularProgressIndicator()
-                else ...[
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                Text(
+                  currentUser['name'] ?? 'Utilisateur VIMARK',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(height: 6),
-                  Text(email),
-                  const SizedBox(height: 4),
-                  Text(phone),
-                ],
+                ),
+                const SizedBox(height: 20),
+                ProfileInfo(
+                  label: 'Nom',
+                  value: currentUser['name'] ?? 'Non renseigné',
+                ),
+                ProfileInfo(
+                  label: 'Email',
+                  value: currentUser['email'] ?? 'Non renseigné',
+                ),
+                ProfileInfo(
+                  label: 'Téléphone',
+                  value: currentUser['phone'] ?? 'Non renseigné',
+                ),
+                ProfileInfo(
+                  label: 'Rôle',
+                  value: currentUser['role'] ?? 'student',
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: editProfile,
+                    icon: const Icon(Icons.edit),
+                    label: const Text('Modifier mon profil'),
+                  ),
+                ),
               ],
             ),
           ),
         ),
-
-        const SizedBox(height: 18),
-
-        ActionCard(
-          icon: Icons.edit_outlined,
-          title: 'Modifier mon profil',
-          text:
-              'Modifiez votre nom, email ou téléphone.',
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) =>
-                    EditProfilePage(
-                  name: name,
-                  email: email,
-                  phone: phone,
-                ),
-              ),
-            ).then((_) {
-              loadProfile();
-            });
-          },
-        ),
-
-        ActionCard(
-          icon: Icons.badge_outlined,
-          title: 'Rôle',
-          text: role,
-        ),
-
+        const SizedBox(height: 16),
         ActionCard(
           icon: Icons.star_outline,
           title: 'VIMARK Premium',
           text: 'Gérez votre abonnement.',
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) =>
-                    const PremiumPage(),
-              ),
-            );
-          },
+          onTap: openPremium,
         ),
-
         ActionCard(
           icon: Icons.storefront,
           title: 'Espace commerçant',
-          text:
-              'Gérez votre boutique et vos produits.',
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) =>
-                    const MerchantPage(),
-              ),
-            );
-          },
+          text: 'Gérez votre boutique et vos produits.',
+          onTap: openMerchantSpace,
         ),
-
-        const ActionCard(
+        ActionCard(
           icon: Icons.settings_outlined,
           title: 'Paramètres',
           text: 'Préférences du compte.',
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Les paramètres seront disponibles prochainement.',
+                ),
+              ),
+            );
+          },
         ),
       ],
     );
   }
 }
 
-/* =========================
-   EDIT PROFILE
-========================= */
-
-class EditProfilePage extends StatefulWidget {
-  final String name;
-  final String email;
-  final String phone;
-
-  const EditProfilePage({
-    super.key,
-    required this.name,
-    required this.email,
-    required this.phone,
-  });
-
-  @override
-  State<EditProfilePage> createState() =>
-      _EditProfilePageState();
-}
-
-class _EditProfilePageState
-    extends State<EditProfilePage> {
-  late final TextEditingController nameController;
-  late final TextEditingController emailController;
-  late final TextEditingController phoneController;
-
-  bool saving = false;
-
-  @override
-  void initState() {
-    super.initState();
-
-    nameController =
-        TextEditingController(
-      text: widget.name,
-    );
-
-    emailController =
-        TextEditingController(
-      text: widget.email ==
-              'Votre adresse email'
-          ? ''
-          : widget.email,
-    );
-
-    phoneController =
-        TextEditingController(
-      text: widget.phone ==
-              'Non renseigné'
-          ? ''
-          : widget.phone,
-    );
-  }
-
-  @override
-  void dispose() {
-    nameController.dispose();
-    emailController.dispose();
-    phoneController.dispose();
-    super.dispose();
-  }
-
-  Future<void> save() async {
-    if (nameController.text.trim().isEmpty) {
-      showMessage('Le nom est requis.');
-      return;
-    }
-
-    setState(() {
-      saving = true;
-    });
-
-    try {
-      await ApiService.updateMe(
-        name: nameController.text.trim(),
-        email: emailController.text.trim().isEmpty
-            ? null
-            : emailController.text.trim(),
-        phone: phoneController.text.trim().isEmpty
-            ? null
-            : phoneController.text.trim(),
-      );
-
-      if (!mounted) return;
-
-      showMessage(
-        'Profil mis à jour avec succès',
-      );
-
-      Navigator.of(context).pop();
-    } catch (e) {
-      if (!mounted) return;
-
-      showMessage(
-        e.toString()
-            .replaceFirst('Exception: ', ''),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          saving = false;
-        });
-      }
-    }
-  }
-
-  void showMessage(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-      SnackBar(
-        content: Text(message),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Modifier mon profil',
-        ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          TextField(
-            controller: nameController,
-            decoration: const InputDecoration(
-              labelText: 'Nom',
-              border: OutlineInputBorder(),
-              prefixIcon:
-                  Icon(Icons.person_outline),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          TextField(
-            controller: emailController,
-            keyboardType:
-                TextInputType.emailAddress,
-            decoration: const InputDecoration(
-              labelText: 'Email',
-              border: OutlineInputBorder(),
-              prefixIcon:
-                  Icon(Icons.email_outlined),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          TextField(
-            controller: phoneController,
-            keyboardType:
-                TextInputType.phone,
-            decoration: const InputDecoration(
-              labelText: 'Téléphone',
-              border: OutlineInputBorder(),
-              prefixIcon:
-                  Icon(Icons.phone_outlined),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          FilledButton(
-            onPressed: saving ? null : save,
-            child: saving
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child:
-                        CircularProgressIndicator(
-                      strokeWidth: 2,
-                    ),
-                  )
-                : const Text(
-                    'Enregistrer',
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/* =========================
-   MERCHANT PAGE
-========================= */
+/* =========================================================
+   ESPACE COMMERÇANT
+========================================================= */
 
 class MerchantPage extends StatefulWidget {
   const MerchantPage({super.key});
 
   @override
-  State<MerchantPage> createState() =>
-      _MerchantPageState();
+  State<MerchantPage> createState() => _MerchantPageState();
 }
 
-class _MerchantPageState
-    extends State<MerchantPage> {
+class _MerchantPageState extends State<MerchantPage> {
   bool loading = true;
-  bool creating = false;
-
   Map<String, dynamic>? business;
   List<dynamic> products = [];
+  String? error;
 
   @override
   void initState() {
     super.initState();
-    loadMerchantData();
+    loadData();
   }
 
-  Future<void> loadMerchantData() async {
-    try {
-      final result =
-          await ApiService.getMyBusiness();
+  Future<void> loadData() async {
+    setState(() {
+      loading = true;
+      error = null;
+    });
 
-      final productResult =
-          await ApiService.getMyProducts();
+    try {
+      Map<String, dynamic>? store;
+      List<dynamic> myProducts = [];
+
+      try {
+        store = await ApiService.getMyBusiness();
+      } catch (_) {
+        store = null;
+      }
+
+      try {
+        myProducts = await ApiService.getMyProducts();
+      } catch (_) {
+        myProducts = [];
+      }
 
       if (!mounted) return;
 
       setState(() {
-        business = result;
-        products = productResult;
+        business = store;
+        products = myProducts;
         loading = false;
       });
     } catch (e) {
-      try {
-        final productResult =
-            await ApiService.getMyProducts();
+      if (!mounted) return;
 
-        if (!mounted) return;
-
-        setState(() {
-          products = productResult;
-          loading = false;
-        });
-      } catch (_) {
-        if (!mounted) return;
-
-        setState(() {
-          loading = false;
-        });
-      }
+      setState(() {
+        loading = false;
+        error = e.toString().replaceFirst('Exception: ', '');
+      });
     }
   }
 
   Future<void> createBusiness() async {
-    final nameController =
-        TextEditingController();
+    final nameController = TextEditingController();
+    final descriptionController = TextEditingController();
+    final locationController = TextEditingController();
 
-    final descriptionController =
-        TextEditingController();
-
-    final locationController =
-        TextEditingController();
-
-    final result =
-        await showDialog<bool>(
+    final result = await showDialog<bool>(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
-          title: const Text(
-            'Créer ma boutique',
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize:
-                  MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration:
-                      const InputDecoration(
-                    labelText:
-                        'Nom de la boutique',
-                  ),
-                ),
-                TextField(
-                  controller:
-                      descriptionController,
-                  decoration:
-                      const InputDecoration(
-                    labelText:
-                        'Description',
-                  ),
-                ),
-                TextField(
-                  controller:
-                      locationController,
-                  decoration:
-                      const InputDecoration(
-                    labelText:
-                        'Localisation',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () =>
-                  Navigator.pop(
-                context,
-                false,
-              ),
-              child:
-                  const Text('Annuler'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                if (nameController
-                    .text
-                    .trim()
-                    .isEmpty) {
-                  return;
-                }
-
-                setState(() {
-                  creating = true;
-                });
-
-                try {
-                  await ApiService
-                      .createBusiness(
-                    name:
-                        nameController.text
-                            .trim(),
-                    description:
-                        descriptionController
-                            .text
-                            .trim(),
-                    location:
-                        locationController
-                            .text
-                            .trim(),
-                  );
-
-                  if (!mounted) return;
-
-                  Navigator.pop(
-                    context,
-                    true,
-                  );
-                } catch (e) {
-                  if (!mounted) return;
-
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        e.toString()
-                            .replaceFirst(
-                          'Exception: ',
-                          '',
-                        ),
-                      ),
-                    ),
-                  );
-                } finally {
-                  if (mounted) {
-                    setState(() {
-                      creating = false;
-                    });
-                  }
-                }
-              },
-              child: creating
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child:
-                          CircularProgressIndicator(
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Text(
-                      'Créer',
-                    ),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (result == true) {
-      loadMerchantData();
-    }
-
-    nameController.dispose();
-    descriptionController.dispose();
-    locationController.dispose();
-  }
-
-  Future<void> addProduct() async {
-    if (business == null) {
-      return;
-    }
-
-    final nameController =
-        TextEditingController();
-
-    final priceController =
-        TextEditingController();
-
-    final stockController =
-        TextEditingController();
-
-    final descriptionController =
-        TextEditingController();
-
-        final result = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text(
-            'Ajouter un produit',
-          ),
+          title: const Text('Créer ma boutique'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -863,30 +716,24 @@ class _MerchantPageState
                 TextField(
                   controller: nameController,
                   decoration: const InputDecoration(
-                    labelText: 'Nom du produit',
+                    labelText: 'Nom de la boutique',
+                    border: OutlineInputBorder(),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 TextField(
                   controller: descriptionController,
                   decoration: const InputDecoration(
                     labelText: 'Description',
+                    border: OutlineInputBorder(),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 TextField(
-                  controller: priceController,
-                  keyboardType: TextInputType.number,
+                  controller: locationController,
                   decoration: const InputDecoration(
-                    labelText: 'Prix en FCFA',
-                  ),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: stockController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Stock',
+                    labelText: 'Localisation',
+                    border: OutlineInputBorder(),
                   ),
                 ),
               ],
@@ -895,50 +742,32 @@ class _MerchantPageState
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context, false);
+                Navigator.pop(dialogContext, false);
               },
               child: const Text('Annuler'),
             ),
             FilledButton(
               onPressed: () async {
-                final price = int.tryParse(
-                  priceController.text.trim(),
-                );
-
-                final stock = int.tryParse(
-                      stockController.text.trim(),
-                    ) ??
-                    0;
-
-                if (nameController.text.trim().isEmpty ||
-                    price == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Nom et prix sont requis.',
-                      ),
-                    ),
-                  );
+                if (nameController.text.trim().isEmpty) {
                   return;
                 }
 
                 try {
-                  await ApiService.createProduct(
-                    businessId: business!['id'],
+                  await ApiService.createBusiness(
                     name: nameController.text.trim(),
                     description:
                         descriptionController.text.trim(),
-                    price: price,
-                    stock: stock,
+                    location:
+                        locationController.text.trim(),
                   );
 
-                  if (!mounted) return;
+                  if (!dialogContext.mounted) return;
 
-                  Navigator.pop(context, true);
+                  Navigator.pop(dialogContext, true);
                 } catch (e) {
-                  if (!mounted) return;
+                  if (!dialogContext.mounted) return;
 
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
                     SnackBar(
                       content: Text(
                         e.toString().replaceFirst(
@@ -957,15 +786,75 @@ class _MerchantPageState
       },
     );
 
-    if (result == true) {
-      await loadMerchantData();
-    }
-
     nameController.dispose();
+    descriptionController.dispose();
     priceController.dispose();
     stockController.dispose();
-    descriptionController.dispose();
+
+    if (result == true) {
+      await loadData();
+    }
   }
+
+  Future<void> deleteProduct(int productId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Supprimer le produit ?'),
+          content: const Text(
+            'Cette action est irréversible.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              child: const Text('Supprimer'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await ApiService.deleteProduct(
+        productId: productId,
+      );
+
+      await loadData();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Produit supprimé.'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst(
+                  'Exception: ',
+                  '',
+                ),
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -977,30 +866,39 @@ class _MerchantPageState
               child: CircularProgressIndicator(),
             )
           : RefreshIndicator(
-              onRefresh: loadMerchantData,
+              onRefresh: loadData,
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  if (business == null)
+                  if (error != null)
+                    ErrorCard(
+                      message: error!,
+                      onRetry: loadData,
+                    )
+                  else if (business == null)
                     Card(
                       child: Padding(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(24),
                         child: Column(
                           children: [
                             const Icon(
                               Icons.storefront,
-                              size: 60,
+                              size: 70,
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 16),
                             const Text(
-                              'Vous n’avez pas encore de boutique.',
-                              textAlign: TextAlign.center,
+                              'Votre boutique',
                               style: TextStyle(
-                                fontSize: 18,
+                                fontSize: 24,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Créez votre boutique VIMARK pour commencer à vendre.',
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 20),
                             FilledButton.icon(
                               onPressed: createBusiness,
                               icon: const Icon(
@@ -1030,11 +928,11 @@ class _MerchantPageState
                             Text(
                               business!['name'] ?? '',
                               style: const TextStyle(
-                                fontSize: 22,
+                                fontSize: 24,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 8),
                             Text(
                               business!['description'] ?? '',
                             ),
@@ -1088,39 +986,54 @@ class _MerchantPageState
             ),
     );
   }
-/* =========================
-   PREMIUM
-========================= */
+}
 
-class PremiumPage extends StatelessWidget {
+/* =========================================================
+   PREMIUM
+========================================================= */
+
+class PremiumPage extends StatefulWidget {
   const PremiumPage({super.key});
 
-  Future<void> subscribe(BuildContext context) async {
+  @override
+  State<PremiumPage> createState() => _PremiumPageState();
+}
+
+class _PremiumPageState extends State<PremiumPage> {
+  bool loading = false;
+
+  Future<void> subscribe() async {
+    setState(() {
+      loading = true;
+    });
+
     try {
       final result = await ApiService.createSubscription();
 
-      if (!context.mounted) return;
+      if (!mounted) return;
 
       showDialog(
         context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('VIMARK Premium'),
-          content: Text(
-            result['message'] ??
-                'Abonnement activé.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('OK'),
+        builder: (dialogContext) {
+          return AlertDialog(
+            title: const Text('VIMARK Premium'),
+            content: Text(
+              result['message'] ??
+                  'Abonnement activé avec succès.',
             ),
-          ],
-        ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext);
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
       );
     } catch (e) {
-      if (!context.mounted) return;
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -1132,6 +1045,12 @@ class PremiumPage extends StatelessWidget {
           ),
         ),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
     }
   }
 
@@ -1142,33 +1061,66 @@ class PremiumPage extends StatelessWidget {
         title: const Text('VIMARK Premium'),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         children: [
           const Icon(
             Icons.star,
-            size: 80,
+            size: 90,
           ),
           const SizedBox(height: 20),
           const Text(
             'VIMARK Premium',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 28,
+              fontSize: 30,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           const Text(
             'Profitez des avantages Premium VIMARK.',
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 30),
-          FilledButton(
-            onPressed: () {
-              subscribe(context);
-            },
-            child: const Text(
-              'Activer Premium — 1 500 FCFA',
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  const Text(
+                    'Premium',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '1 500 FCFA / mois',
+                    style: TextStyle(
+                      fontSize: 20,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: loading ? null : subscribe,
+                      child: loading
+                          ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Activer Premium',
+                            ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -1177,106 +1129,68 @@ class PremiumPage extends StatelessWidget {
   }
 }
 
-/* =========================
-   CARDS
-========================= */
+/* =========================================================
+   WIDGETS
+========================================================= */
 
-class CourseCard extends StatelessWidget {
-  final dynamic course;
+class AppPage extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final List<Widget> children;
 
-  const CourseCard({
+  const AppPage({
     super.key,
-    required this.course,
+    required this.title,
+    required this.subtitle,
+    required this.children,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: const CircleAvatar(
-          child: Icon(Icons.school),
-        ),
-        title: Text(
-          course['title'] ?? 'Cours',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context)
+                .textTheme
+                .headlineMedium
+                ?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
           ),
-        ),
-        subtitle: Text(
-          '${course['subject'] ?? ''} • ${course['level'] ?? ''}',
-        ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          const SizedBox(height: 24),
+          ...children,
+        ],
       ),
     );
   }
 }
 
-class MarketplaceProductCard extends StatelessWidget {
-  final dynamic product;
+class SectionTitle extends StatelessWidget {
+  final String title;
 
-  const MarketplaceProductCard({
+  const SectionTitle({
     super.key,
-    required this.product,
+    required this.title,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: const Icon(
-          Icons.shopping_bag_outlined,
-          size: 34,
-        ),
-        title: Text(
-          product['name'] ?? 'Produit',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        subtitle: Text(
-          '${product['price'] ?? 0} FCFA',
-        ),
-        trailing: const Icon(
-          Icons.chevron_right,
-        ),
-      ),
-    );
-  }
-}
-
-class MerchantProductCard extends StatelessWidget {
-  final dynamic product;
-  final VoidCallback onDelete;
-
-  const MerchantProductCard({
-    super.key,
-    required this.product,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: const Icon(
-          Icons.inventory_2_outlined,
-        ),
-        title: Text(
-          product['name'] ?? 'Produit',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        subtitle: Text(
-          '${product['price'] ?? 0} FCFA • Stock: ${product['stock'] ?? 0}',
-        ),
-        trailing: IconButton(
-          icon: const Icon(
-            Icons.delete_outline,
-          ),
-          onPressed: onDelete,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
@@ -1313,6 +1227,109 @@ class ActionCard extends StatelessWidget {
           ),
         ),
         subtitle: Text(text),
+        trailing: onTap != null
+            ? const Icon(Icons.chevron_right)
+            : null,
+      ),
+    );
+  }
+}
+
+class ErrorCard extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const ErrorCard({
+    super.key,
+    required this.message,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const Icon(
+              Icons.error_outline,
+              size: 50,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton(
+              onPressed: onRetry,
+              child: const Text('Réessayer'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class CourseCard extends StatelessWidget {
+  final dynamic course;
+
+  const CourseCard({
+    super.key,
+    required this.course,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: const CircleAvatar(
+          child: Icon(Icons.school),
+        ),
+        title: Text(
+          course['title'] ?? 'Cours',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(
+          '${course['subject'] ?? ''} • ${course['level'] ?? ''}',
+        ),
+      ),
+    );
+  }
+}
+
+class ProductCard extends StatelessWidget {
+  final dynamic product;
+
+  const ProductCard({
+    super.key,
+    required this.product,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: const Icon(
+          Icons.shopping_bag_outlined,
+          size: 34,
+        ),
+        title: Text(
+          product['name'] ?? 'Produit',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(
+          '${product['price'] ?? 0} FCFA'
+          ' • ${product['business_name'] ?? ''}',
+        ),
         trailing: const Icon(
           Icons.chevron_right,
         ),
@@ -1321,44 +1338,76 @@ class ActionCard extends StatelessWidget {
   }
 }
 
-class Page extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final List<Widget> children;
+class MerchantProductCard extends StatelessWidget {
+  final dynamic product;
+  final VoidCallback onDelete;
 
-  const Page({
+  const MerchantProductCard({
     super.key,
-    required this.title,
-    required this.subtitle,
-    required this.children,
+    required this.product,
+    required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: const Icon(
+          Icons.inventory_2_outlined,
+        ),
+        title: Text(
+          product['name'] ?? 'Produit',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(
+          '${product['price'] ?? 0} FCFA'
+          ' • Stock: ${product['stock'] ?? 0}',
+        ),
+        trailing: IconButton(
+          onPressed: onDelete,
+          icon: const Icon(
+            Icons.delete_outline,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ProfileInfo extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const ProfileInfo({
+    super.key,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: Theme.of(context)
-                .textTheme
-                .headlineMedium
-                ?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+          SizedBox(
+            width: 90,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            subtitle,
-            style: Theme.of(context).textTheme.bodyLarge,
+          Expanded(
+            child: Text(value),
           ),
-          const SizedBox(height: 24),
-          ...children,
         ],
       ),
     );
   }
 }
-         
