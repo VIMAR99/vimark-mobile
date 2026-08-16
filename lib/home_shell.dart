@@ -609,7 +609,29 @@ class PremiumPage extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () async {
+  try {
+    await ApiService.createSubscription();
+
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Félicitations ! Votre abonnement Premium est activé.',
+        ),
+      ),
+    );
+  } catch (e) {
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Erreur : $e'),
+      ),
+    );
+  }
+},
                 icon: const Icon(Icons.star),
                 label: const Text('Devenir Premium'),
               ),
