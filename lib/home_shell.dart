@@ -518,6 +518,24 @@ class _ProfilePageState extends State<ProfilePage> {
                         icon: const Icon(Icons.edit),
                         label: const Text('Modifier mon profil'),
                       ),
+                      const SizedBox(height: 12),
+
+OutlinedButton.icon(
+  onPressed: () async {
+    await ApiService.clearToken();
+
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => const AuthPage(),
+      ),
+      (route) => false,
+    );
+  },
+  icon: const Icon(Icons.logout),
+  label: const Text('Déconnexion'),
+),
                     ],
                   ),
                 ),
