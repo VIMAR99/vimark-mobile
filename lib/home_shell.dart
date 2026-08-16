@@ -967,7 +967,128 @@ class _MerchantPageState
     descriptionController.dispose();
   }
 }
-
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Espace commerçant'),
+      ),
+      body: loading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : RefreshIndicator(
+              onRefresh: loadMerchantData,
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  if (business == null)
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            const Icon(
+                              Icons.storefront,
+                              size: 60,
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Vous n’avez pas encore de boutique.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            FilledButton.icon(
+                              onPressed: createBusiness,
+                              icon: const Icon(
+                                Icons.add_business,
+                              ),
+                              label: const Text(
+                                'Créer ma boutique',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else ...[
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.storefront,
+                              size: 45,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              business!['name'] ?? '',
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              business!['description'] ?? '',
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              business!['location'] ?? '',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Mes produits',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        FilledButton.icon(
+                          onPressed: addProduct,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Ajouter'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (products.isEmpty)
+                      const ActionCard(
+                        icon: Icons.inventory_2_outlined,
+                        title: 'Aucun produit',
+                        text:
+                            'Ajoutez votre premier produit.',
+                      )
+                    else
+                      ...products.map(
+                        (product) => MerchantProductCard(
+                          product: product,
+                          onDelete: () {
+                            deleteProduct(product['id']);
+                          },
+                        ),
+                      ),
+                  ],
+                ],
+              ),
+            ),
+    );
+  }
 /* =========================
    PREMIUM
 ========================= */
