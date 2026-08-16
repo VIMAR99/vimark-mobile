@@ -341,6 +341,12 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                       ),
+                          const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        onPressed: () {},
+                        icon: const Icon(Icons.edit),
+                        label: const Text('Modifier mon profil'),
+                      ),
                     ],
                   ),
                 ),
