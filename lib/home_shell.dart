@@ -849,10 +849,396 @@ class _MerchantPageState
     final descriptionController =
         TextEditingController();
 
-    final result =
-        await showDialog<bool>(
+        final result = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text(
+            'Ajouter un produit',
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nom du produit',
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: descriptionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Description',
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: priceController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Prix en FCFA',
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: stockController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Stock',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final price = int.tryParse(
+                  priceController.text.trim(),
+                );
+
+                final stock = int.tryParse(
+                      stockController.text.trim(),
+                    ) ??
+                    0;
+
+                if (nameController.text.trim().isEmpty ||
+                    price == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Nom et prix sont requis.',
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
+                try {
+                  await ApiService.createProduct(
+                    businessId: business!['id'],
+                    name: nameController.text.trim(),
+                    description:
+                        descriptionController.text.trim(),
+                    price: price,
+                    stock: stock,
+                  );
+
+                  if (!mounted) return;
+
+                  Navigator.pop(context, true);
+                } catch (e) {
+                  if (!mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        e.toString().replaceFirst(
+                              'Exception: ',
+                              '',
+                            ),
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Ajouter'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == true) {
+      await loadMerchantData();
+    }
+
+    nameController.dispose();
+    priceController.dispose();
+    stockController.dispose();
+    descriptionController.dispose();
+  }
+}
+
+/* =========================
+   PREMIUM
+========================= */
+
+class PremiumPage extends StatelessWidget {
+  const PremiumPage({super.key});
+
+  Future<void> subscribe(BuildContext context) async {
+    try {
+      final result = await ApiService.createSubscription();
+
+      if (!context.mounted) return;
+
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('VIMARK Premium'),
+          content: Text(
+            result['message'] ??
+                'Abonnement activé.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst(
+                  'Exception: ',
+                  '',
+                ),
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('VIMARK Premium'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          const Icon(
+            Icons.star,
+            size: 80,
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'VIMARK Premium',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Profitez des avantages Premium VIMARK.',
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 30),
+          FilledButton(
+            onPressed: () {
+              subscribe(context);
+            },
+            child: const Text(
+              'Activer Premium — 1 500 FCFA',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/* =========================
+   CARDS
+========================= */
+
+class CourseCard extends StatelessWidget {
+  final dynamic course;
+
+  const CourseCard({
+    super.key,
+    required this.course,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: const CircleAvatar(
+          child: Icon(Icons.school),
+        ),
+        title: Text(
+          course['title'] ?? 'Cours',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(
+          '${course['subject'] ?? ''} • ${course['level'] ?? ''}',
+        ),
+      ),
+    );
+  }
+}
+
+class MarketplaceProductCard extends StatelessWidget {
+  final dynamic product;
+
+  const MarketplaceProductCard({
+    super.key,
+    required this.product,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: const Icon(
+          Icons.shopping_bag_outlined,
+          size: 34,
+        ),
+        title: Text(
+          product['name'] ?? 'Produit',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(
+          '${product['price'] ?? 0} FCFA',
+        ),
+        trailing: const Icon(
+          Icons.chevron_right,
+        ),
+      ),
+    );
+  }
+}
+
+class MerchantProductCard extends StatelessWidget {
+  final dynamic product;
+  final VoidCallback onDelete;
+
+  const MerchantProductCard({
+    super.key,
+    required this.product,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: const Icon(
+          Icons.inventory_2_outlined,
+        ),
+        title: Text(
+          product['name'] ?? 'Produit',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(
+          '${product['price'] ?? 0} FCFA • Stock: ${product['stock'] ?? 0}',
+        ),
+        trailing: IconButton(
+          icon: const Icon(
+            Icons.delete_outline,
+          ),
+          onPressed: onDelete,
+        ),
+      ),
+    );
+  }
+}
+
+class ActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String text;
+  final VoidCallback? onTap;
+
+  const ActionCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.text,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        onTap: onTap,
+        leading: CircleAvatar(
+          child: Icon(icon),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(text),
+        trailing: const Icon(
+          Icons.chevron_right,
+        ),
+      ),
+    );
+  }
+}
+
+class Page extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final List<Widget> children;
+
+  const Page({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context)
+                .textTheme
+                .headlineMedium
+                ?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          const SizedBox(height: 24),
+          ...children,
+        ],
+      ),
+    );
+  }
+}
          
