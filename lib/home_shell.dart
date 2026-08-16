@@ -251,3 +251,31 @@ class ProfilePage extends StatefulWidget {
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
+class _ProfilePageState extends State<ProfilePage> {
+  bool loading = true;
+  Map<String, dynamic>? user;
+
+  @override
+  void initState() {
+    super.initState();
+    loadProfile();
+  }
+
+  Future<void> loadProfile() async {
+    try {
+      final result = await ApiService.getMe();
+
+      if (!mounted) return;
+
+      setState(() {
+        user = result;
+        loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        loading = false;
+      });
+    }
+  }
