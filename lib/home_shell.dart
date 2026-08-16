@@ -94,83 +94,6 @@ class _CoursesPageState extends State<CoursesPage> {
     loadCourses();
   }
 
-  Future<void> editProfile() async {
-  final nameController = TextEditingController(
-    text: user?['name'] ?? '',
-  );
-
-  final emailController = TextEditingController(
-    text: user?['email'] ?? '',
-  );
-
-  final phoneController = TextEditingController(
-    text: user?['phone'] ?? '',
-  );
-
-  await showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: const Text('Modifier mon profil'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nom',
-                ),
-              ),
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                ),
-              ),
-              TextField(
-                controller: phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Téléphone',
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              await ApiService.updateMe(
-                name: nameController.text.trim(),
-                email: emailController.text.trim().isEmpty
-                    ? null
-                    : emailController.text.trim(),
-                phone: phoneController.text.trim().isEmpty
-                    ? null
-                    : phoneController.text.trim(),
-              );
-
-              if (!mounted) return;
-
-              Navigator.pop(context);
-              await loadProfile();
-            },
-            child: const Text('Enregistrer'),
-          ),
-        ],
-      );
-    },
-  );
-
-  nameController.dispose();
-  emailController.dispose();
-  phoneController.dispose();
-  }
-
   Future<void> loadCourses() async {
     try {
       final result = await ApiService.getCourses();
@@ -331,7 +254,82 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   bool loading = true;
   Map<String, dynamic>? user;
+  Future<void> editProfile() async {
+    final nameController = TextEditingController(
+      text: user?['name'] ?? '',
+    );
 
+    final emailController = TextEditingController(
+      text: user?['email'] ?? '',
+    );
+
+    final phoneController = TextEditingController(
+      text: user?['phone'] ?? '',
+    );
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Modifier mon profil'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nom',
+                  ),
+                ),
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                  ),
+                ),
+                TextField(
+                  controller: phoneController,
+                  decoration: const InputDecoration(
+                    labelText: 'Téléphone',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Annuler'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await ApiService.updateMe(
+                  name: nameController.text.trim(),
+                  email: emailController.text.trim().isEmpty
+                      ? null
+                      : emailController.text.trim(),
+                  phone: phoneController.text.trim().isEmpty
+                      ? null
+                      : phoneController.text.trim(),
+                );
+
+                if (!mounted) return;
+
+                Navigator.pop(context);
+                await loadProfile();
+              },
+              child: const Text('Enregistrer'),
+            ),
+          ],
+        );
+      },
+    );
+
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+  }
   @override
   void initState() {
     super.initState();
