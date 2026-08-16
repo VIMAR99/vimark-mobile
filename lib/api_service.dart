@@ -6,6 +6,10 @@ class ApiService {
   static const String baseUrl =
       'https://vimark-api-prod.onrender.com';
 
+  // =========================
+  // TOKEN / SESSION
+  // =========================
+
   static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('vimark_token', token);
@@ -21,6 +25,10 @@ class ApiService {
     await prefs.remove('vimark_token');
   }
 
+  // =========================
+  // HEALTH
+  // =========================
+
   static Future<Map<String, dynamic>> health() async {
     final response = await http.get(
       Uri.parse('$baseUrl/api/health'),
@@ -30,8 +38,14 @@ class ApiService {
       return jsonDecode(response.body);
     }
 
-    throw Exception('Erreur API: ${response.statusCode}');
+    throw Exception(
+      'Erreur API: ${response.statusCode}',
+    );
   }
+
+  // =========================
+  // REGISTER
+  // =========================
 
   static Future<Map<String, dynamic>> register({
     required String name,
@@ -65,9 +79,14 @@ class ApiService {
     }
 
     throw Exception(
-      data['error'] ?? 'Erreur lors de l inscription',
+      data['error'] ??
+          'Erreur lors de l inscription',
     );
   }
+
+  // =========================
+  // LOGIN
+  // =========================
 
   static Future<Map<String, dynamic>> login({
     required String identifier,
@@ -95,15 +114,22 @@ class ApiService {
     }
 
     throw Exception(
-      data['error'] ?? 'Identifiants incorrects',
+      data['error'] ??
+          'Identifiants incorrects',
     );
   }
+
+  // =========================
+  // CURRENT USER
+  // =========================
 
   static Future<Map<String, dynamic>> getMe() async {
     final token = await getToken();
 
     if (token == null || token.isEmpty) {
-      throw Exception('Session utilisateur introuvable');
+      throw Exception(
+        'Session utilisateur introuvable',
+      );
     }
 
     final response = await http.get(
@@ -120,9 +146,14 @@ class ApiService {
     }
 
     throw Exception(
-      data['error'] ?? 'Impossible de récupérer votre profil',
+      data['error'] ??
+          'Impossible de récupérer votre profil',
     );
   }
+
+  // =========================
+  // UPDATE PROFILE
+  // =========================
 
   static Future<Map<String, dynamic>> updateMe({
     required String name,
@@ -132,7 +163,9 @@ class ApiService {
     final token = await getToken();
 
     if (token == null || token.isEmpty) {
-      throw Exception('Session utilisateur introuvable');
+      throw Exception(
+        'Session utilisateur introuvable',
+      );
     }
 
     final response = await http.put(
@@ -155,36 +188,130 @@ class ApiService {
     }
 
     throw Exception(
-      data['error'] ?? 'Impossible de modifier votre profil',
+      data['error'] ??
+          'Impossible de modifier votre profil',
     );
   }
 
-  static Future<List<dynamic>> getCourses({
-    String? subject,
-    String? level,
+  // =========================
+  // BUSINESS - CREATE
+  // =========================
+
+  static Future<Map<String, dynamic>> createBusiness({
+    required String name,
+    String description = '',
+    String location = '',
   }) async {
-    final query = <String, String>{};
+    final token = await getToken();
 
-    if (subject != null && subject.isNotEmpty) {
-      query['subject'] = subject;
+    if (token == null || token.isEmpty) {
+      throw Exception(
+        'Session utilisateur introuvable',
+      );
     }
 
-    if (level != null && level.isNotEmpty) {
-      query['level'] = level;
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/businesses'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'name': name,
+        'description': description,
+        'location': location,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 201) {
+      return data;
     }
 
-    final uri = Uri.parse(
-      '$baseUrl/api/courses',
-    ).replace(queryParameters: query);
+    throw Exception(
+      data['error'] ??
+          'Impossible de créer la boutique',
+    );
+  }
 
-    final response = await http.get(uri);
+  // =========================
+  // BUSINESS - MY STORE
+  // =========================
+
+  static Future<Map<String, dynamic>> getMyBusiness() async {
+    final token = await getToken();
+
+    if (token == null || token.isEmpty) {
+      throw Exception(
+        'Session utilisateur introuvable',
+      );
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/businesses/me'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    final data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      return data;
     }
 
-    throw Exception('Impossible de charger les cours');
+    throw Exception(
+      data['error'] ??
+          'Impossible de récupérer votre boutique',
+    );
   }
+
+  // =========================
+  // BUSINESS - UPDATE
+  // =========================
+
+  static Future<Map<String, dynamic>> updateBusiness({
+    required String name,
+    String description = '',
+    String location = '',
+  }) async {
+    final token = await getToken();
+
+    if (token == null || token.isEmpty) {
+      throw Exception(
+        'Session utilisateur introuvable',
+      );
+    }
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/api/businesses/me'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'name': name,
+        'description': description,
+        'location': location,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return data;
+    }
+
+    throw Exception(
+      data['error'] ??
+          'Impossible de modifier la boutique',
+    );
+  }
+
+  // =========================
+  // PRODUCTS - PUBLIC
+  // =========================
 
   static Future<List<dynamic>> getProducts({
     String? search,
@@ -192,9 +319,10 @@ class ApiService {
     final uri = Uri.parse(
       '$baseUrl/api/products',
     ).replace(
-      queryParameters: search != null && search.isNotEmpty
-          ? {'search': search}
-          : {},
+      queryParameters:
+          search != null && search.isNotEmpty
+              ? {'search': search}
+              : {},
     );
 
     final response = await http.get(uri);
@@ -203,6 +331,282 @@ class ApiService {
       return jsonDecode(response.body);
     }
 
-    throw Exception('Impossible de charger les produits');
+    throw Exception(
+      'Impossible de charger les produits',
+    );
+  }
+
+  // =========================
+  // PRODUCTS - MY PRODUCTS
+  // =========================
+
+  static Future<List<dynamic>> getMyProducts() async {
+    final token = await getToken();
+
+    if (token == null || token.isEmpty) {
+      throw Exception(
+        'Session utilisateur introuvable',
+      );
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/products/me'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return data;
+    }
+
+    throw Exception(
+      data['error'] ??
+          'Impossible de récupérer vos produits',
+    );
+  }
+
+  // =========================
+  // PRODUCT - CREATE
+  // =========================
+
+  static Future<Map<String, dynamic>> createProduct({
+    required int businessId,
+    required String name,
+    String description = '',
+    required int price,
+    String imageUrl = '',
+    int stock = 0,
+  }) async {
+    final token = await getToken();
+
+    if (token == null || token.isEmpty) {
+      throw Exception(
+        'Session utilisateur introuvable',
+      );
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/products'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'business_id': businessId,
+        'name': name,
+        'description': description,
+        'price': price,
+        'image_url': imageUrl,
+        'stock': stock,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 201) {
+      return data;
+    }
+
+    throw Exception(
+      data['error'] ??
+          'Impossible de créer le produit',
+    );
+  }
+
+  // =========================
+  // PRODUCT - UPDATE
+  // =========================
+
+  static Future<Map<String, dynamic>> updateProduct({
+    required int productId,
+    required String name,
+    String description = '',
+    required int price,
+    String imageUrl = '',
+    int stock = 0,
+  }) async {
+    final token = await getToken();
+
+    if (token == null || token.isEmpty) {
+      throw Exception(
+        'Session utilisateur introuvable',
+      );
+    }
+
+    final response = await http.put(
+      Uri.parse(
+        '$baseUrl/api/products/$productId',
+      ),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'name': name,
+        'description': description,
+        'price': price,
+        'image_url': imageUrl,
+        'stock': stock,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return data;
+    }
+
+    throw Exception(
+      data['error'] ??
+          'Impossible de modifier le produit',
+    );
+  }
+
+  // =========================
+  // PRODUCT - DELETE
+  // =========================
+
+  static Future<void> deleteProduct({
+    required int productId,
+  }) async {
+    final token = await getToken();
+
+    if (token == null || token.isEmpty) {
+      throw Exception(
+        'Session utilisateur introuvable',
+      );
+    }
+
+    final response = await http.delete(
+      Uri.parse(
+        '$baseUrl/api/products/$productId',
+      ),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return;
+    }
+
+    final data = jsonDecode(response.body);
+
+    throw Exception(
+      data['error'] ??
+          'Impossible de supprimer le produit',
+    );
+  }
+
+  // =========================
+  // COURSES
+  // =========================
+
+  static Future<List<dynamic>> getCourses({
+    String? subject,
+    String? level,
+  }) async {
+    final query = <String, String>{};
+
+    if (subject != null &&
+        subject.isNotEmpty) {
+      query['subject'] = subject;
+    }
+
+    if (level != null &&
+        level.isNotEmpty) {
+      query['level'] = level;
+    }
+
+    final uri = Uri.parse(
+      '$baseUrl/api/courses',
+    ).replace(
+      queryParameters: query,
+    );
+
+    final response = await http.get(uri);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+
+    throw Exception(
+      'Impossible de charger les cours',
+    );
+  }
+
+  // =========================
+  // SUBSCRIPTIONS
+  // =========================
+
+  static Future<Map<String, dynamic>>
+      createSubscription({
+    String plan = 'premium',
+    int amount = 1500,
+  }) async {
+    final token = await getToken();
+
+    if (token == null || token.isEmpty) {
+      throw Exception(
+        'Session utilisateur introuvable',
+      );
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/subscriptions'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'plan': plan,
+        'amount': amount,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 201) {
+      return data;
+    }
+
+    throw Exception(
+      data['error'] ??
+          'Impossible de créer l abonnement',
+    );
+  }
+
+  static Future<List<dynamic>>
+      getMySubscriptions() async {
+    final token = await getToken();
+
+    if (token == null || token.isEmpty) {
+      throw Exception(
+        'Session utilisateur introuvable',
+      );
+    }
+
+    final response = await http.get(
+      Uri.parse(
+        '$baseUrl/api/subscriptions/me',
+      ),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return data;
+    }
+
+    throw Exception(
+      data['error'] ??
+          'Impossible de récupérer les abonnements',
+    );
   }
 }
