@@ -15,7 +15,6 @@ class _HomeShellState extends State<HomeShell> {
     HomePage(),
     CoursesPage(),
     ProductsPage(),
-    ProfilePage(),
   ];
 
   @override
