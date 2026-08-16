@@ -12,6 +12,26 @@ class AuthPage extends StatefulWidget {
 class _AuthPageState extends State<AuthPage> {
   bool isLogin = true;
   bool loading = false;
+  
+  @override
+void initState() {
+  super.initState();
+  checkSession();
+}
+
+Future<void> checkSession() async {
+  final token = await ApiService.getToken();
+
+  if (!mounted) return;
+
+  if (token != null && token.isNotEmpty) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => const HomeShell(),
+      ),
+    );
+  }
+}
 
   final nameController = TextEditingController();
   final identifierController = TextEditingController();
