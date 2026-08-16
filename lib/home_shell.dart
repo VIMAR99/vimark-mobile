@@ -169,26 +169,90 @@ class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
-  Widget build(BuildContext context) => const Page(
+  Widget build(BuildContext context) => Page(
         title: 'Mon compte',
         subtitle: 'Gérez votre espace VIMARK.',
         children: [
           ActionCard(
+            icon: Icons.person_outline,
+            title: 'Mon compte',
+            text: 'Consultez et gérez vos informations.',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const AccountPage(),
+                ),
+              );
+            },
+          ),
+          const ActionCard(
             icon: Icons.star_outline,
             title: 'VIMARK Premium',
             text: 'Gérer votre abonnement.',
           ),
-          ActionCard(
+          const ActionCard(
             icon: Icons.storefront,
             title: 'Espace commerçant',
             text: 'Gérer votre boutique et vos commandes.',
           ),
-          ActionCard(
+          const ActionCard(
             icon: Icons.settings_outlined,
             title: 'Paramètres',
             text: 'Préférences du compte.',
           ),
         ],
+      );
+}
+
+class AccountPage extends StatelessWidget {
+  const AccountPage({super.key});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+          title: const Text('Mon compte'),
+        ),
+        body: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            const SizedBox(height: 10),
+            const CircleAvatar(
+              radius: 45,
+              child: Icon(
+                Icons.person,
+                size: 50,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.person_outline),
+                title: const Text('Nom'),
+                subtitle: const Text('Utilisateur VIMARK'),
+              ),
+            ),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.email_outlined),
+                title: const Text('E-mail'),
+                subtitle: const Text('Votre adresse e-mail'),
+              ),
+            ),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.phone_outlined),
+                title: const Text('Téléphone'),
+                subtitle: const Text('Non renseigné'),
+              ),
+            ),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.edit),
+              label: const Text('Modifier mon profil'),
+            ),
+          ],
+        ),
       );
 }
 
@@ -233,18 +297,21 @@ class ActionCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String text;
+  final VoidCallback? onTap;
 
   const ActionCard({
     super.key,
     required this.icon,
     required this.title,
     required this.text,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) => Card(
         margin: const EdgeInsets.only(bottom: 12),
         child: ListTile(
+          onTap: onTap,
           leading: CircleAvatar(
             child: Icon(icon),
           ),
