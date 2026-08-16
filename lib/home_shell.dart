@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'api_service.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -85,7 +86,10 @@ class HomePage extends StatelessWidget {
           const SizedBox(height: 18),
           const Text(
             'Accès rapide',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const ActionCard(
             icon: Icons.shopping_bag,
@@ -176,7 +180,7 @@ class ProfilePage extends StatelessWidget {
           ActionCard(
             icon: Icons.person_outline,
             title: 'Mon compte',
-            text: 'Consultez et gérez vos informations.',
+            text: 'Consultez vos informations personnelles.',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -204,54 +208,181 @@ class ProfilePage extends StatelessWidget {
       );
 }
 
-class AccountPage extends StatelessWidget {
+class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: const Text('Mon compte'),
-        ),
-        body: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            const SizedBox(height: 10),
-            const CircleAvatar(
-              radius: 45,
-              child: Icon(
-                Icons.person,
-                size: 50,
-              ),
+  State<AccountPage> createState() => _AccountPageState();
+}
+
+class _AccountPageState extends State<AccountPage> {
+  bool loading = true;
+  String? error;
+  Map<String, dynamic>? user;
+
+  @override
+  void initState() {
+    super.initState();
+    loadProfile();
+  }
+
+  Future<void> loadProfile() async {
+    setState(() {
+      loading = true;
+      error = null;
+    });
+
+    try {
+      final data = await ApiService.getMe();
+
+      if (!mounted) return;
+
+      setState(() {
+        user = data;
+        loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        error = e.toString().replaceFirst('Exception: ', '');
+        loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Mon compte'),
+      ),
+      body: RefreshIndicator(
+        onRefresh: loadProfile,
+        child: loading
+            ? const ListView(
+                children: [
+                  SizedBox(
+                    height: 300,
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+                ],
+              )
+            : error != null
+                ? ListView(
+                    padding: const EdgeInsets.all(24),
+                    children: [
+                      const SizedBox(height: 80),
+                      const Icon(
+                        Icons.error_outline,
+                        size: 60,
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        error!,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+                      FilledButton.icon(
+                        onPressed: loadProfile,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Réessayer'),
+                      ),
+                    ],
+                  )
+                : ListView(
+                    padding: const EdgeInsets.all(20),
+                    children: [
+                      const SizedBox(height: 10),
+
+                      const CircleAvatar(
+                        radius: 45,
+                        child: Icon(
+                          Icons.person,
+                          size: 50,
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      ProfileInfoCard(
+                        icon: Icons.person_outline,
+                        title: 'Nom',
+                        value: user?['name']?.toString() ??
+                            'Non renseigné',
+                      ),
+
+                      ProfileInfoCard(
+                        icon: Icons.email_outlined,
+                        title: 'Email',
+                        value: user?['email']?.toString() ??
+                            'Non renseigné',
+                      ),
+
+                      ProfileInfoCard(
+                        icon: Icons.phone_outlined,
+                        title: 'Téléphone',
+                        value: user?['phone']?.toString() ??
+                            'Non renseigné',
+                      ),
+
+                      ProfileInfoCard(
+                        icon: Icons.badge_outlined,
+                        title: 'Rôle',
+                        value: user?['role']?.toString() ??
+                            'Non renseigné',
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      FilledButton.icon(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'La modification du profil sera disponible prochainement.',
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.edit),
+                        label: const Text('Modifier mon profil'),
+                      ),
+                    ],
+                  ),
+      ),
+    );
+  }
+}
+
+class ProfileInfoCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String value;
+
+  const ProfileInfoCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) => Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: ListTile(
+          leading: CircleAvatar(
+            child: Icon(icon),
+          ),
+          title: Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
             ),
-            const SizedBox(height: 24),
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.person_outline),
-                title: const Text('Nom'),
-                subtitle: const Text('Utilisateur VIMARK'),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.email_outlined),
-                title: const Text('E-mail'),
-                subtitle: const Text('Votre adresse e-mail'),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.phone_outlined),
-                title: const Text('Téléphone'),
-                subtitle: const Text('Non renseigné'),
-              ),
-            ),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.edit),
-              label: const Text('Modifier mon profil'),
-            ),
-          ],
+          ),
+          subtitle: Text(value),
         ),
       );
 }
@@ -279,7 +410,9 @@ class Page extends StatelessWidget {
               style: Theme.of(context)
                   .textTheme
                   .headlineMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
+                  ?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 6),
             Text(
@@ -317,7 +450,9 @@ class ActionCard extends StatelessWidget {
           ),
           title: Text(
             title,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           subtitle: Text(text),
           trailing: const Icon(Icons.chevron_right),
@@ -345,7 +480,9 @@ class ProductCard extends StatelessWidget {
           ),
           title: Text(
             name,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           subtitle: Text(price),
           trailing: FilledButton(
