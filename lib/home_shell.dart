@@ -279,3 +279,71 @@ class _ProfilePageState extends State<ProfilePage> {
       });
     }
   }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Mon profil'),
+      ),
+      body: loading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : user == null
+              ? Center(
+                  child: ElevatedButton(
+                    onPressed: loadProfile,
+                    child: const Text('Réessayer'),
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: loadProfile,
+                  child: ListView(
+                    padding: const EdgeInsets.all(20),
+                    children: [
+                      const CircleAvatar(
+                        radius: 45,
+                        child: Icon(
+                          Icons.person,
+                          size: 50,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Card(
+                        child: ListTile(
+                          title: const Text('Nom'),
+                          subtitle: Text(
+                            user!['name'] ?? 'Non renseigné',
+                          ),
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
+                          title: const Text('Email'),
+                          subtitle: Text(
+                            user!['email'] ?? 'Non renseigné',
+                          ),
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
+                          title: const Text('Téléphone'),
+                          subtitle: Text(
+                            user!['phone'] ?? 'Non renseigné',
+                          ),
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
+                          title: const Text('Rôle'),
+                          subtitle: Text(
+                            user!['role'] ?? 'student',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+    );
+  }
+}
