@@ -55,7 +55,6 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 }
-}
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -77,6 +76,7 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
+}
   class CoursesPage extends StatefulWidget {
   const CoursesPage({super.key});
 
