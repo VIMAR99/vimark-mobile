@@ -124,6 +124,7 @@ class HomePage extends StatelessWidget {
 
             Card(
               child: ListTile(
+              onTap: () => onNavigate(1), 
                 leading: const CircleAvatar(
                   child: Icon(Icons.school),
                 ),
