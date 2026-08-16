@@ -11,7 +11,9 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int currentIndex = 0;
 
-  final pages = [
+  @override
+  Widget build(BuildContext context) {
+    final pages = [
   HomePage(
     onNavigate: (index) {
       setState(() {
@@ -23,8 +25,6 @@ class _HomeShellState extends State<HomeShell> {
   const ProductsPage(),
   const ProfilePage(),
 ];
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       body: pages[currentIndex],
       bottomNavigationBar: NavigationBar(
