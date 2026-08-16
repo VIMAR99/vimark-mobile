@@ -15,6 +15,7 @@ class _HomeShellState extends State<HomeShell> {
     HomePage(),
     CoursesPage(),
     ProductsPage(),
+    ProfilePage(),
   ];
 
   @override
@@ -243,4 +244,10 @@ class _ProductsPageState extends State<ProductsPage> {
                 ),
     );
   }
+}
+class ProfilePage extends StatefulWidget {
+  const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
 }
