@@ -143,21 +143,30 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 12),
 
             Card(
-              child: ListTile(
-                leading: const CircleAvatar(
-                  child: Icon(Icons.star),
-                ),
-                title: const Text(
-                  'VIMARK Premium',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                subtitle: const Text(
-                  'Découvrez les avantages Premium.',
-                ),
-              ),
-            ),
+  child: ListTile(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const PremiumPage(),
+        ),
+      );
+    },
+    leading: const CircleAvatar(
+      child: Icon(Icons.star),
+    ),
+    title: const Text(
+      'VIMARK Premium',
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    subtitle: const Text(
+      'Découvrez les avantages Premium.',
+    ),
+    trailing: const Icon(Icons.chevron_right),
+  ),
+),
           ],
         ),
       ),
