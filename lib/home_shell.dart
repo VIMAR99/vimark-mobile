@@ -420,7 +420,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                           const SizedBox(height: 20),
                       ElevatedButton.icon(
-                        onPressed: () {},
+                        onPressed: editProfile,
                         icon: const Icon(Icons.edit),
                         label: const Text('Modifier mon profil'),
                       ),
