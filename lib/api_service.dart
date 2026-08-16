@@ -60,6 +60,7 @@ class ApiService {
       if (data['token'] != null) {
         await saveToken(data['token']);
       }
+
       return data;
     }
 
@@ -89,6 +90,7 @@ class ApiService {
       if (data['token'] != null) {
         await saveToken(data['token']);
       }
+
       return data;
     }
 
@@ -119,6 +121,41 @@ class ApiService {
 
     throw Exception(
       data['error'] ?? 'Impossible de récupérer votre profil',
+    );
+  }
+
+  static Future<Map<String, dynamic>> updateMe({
+    required String name,
+    String? phone,
+    String? email,
+  }) async {
+    final token = await getToken();
+
+    if (token == null || token.isEmpty) {
+      throw Exception('Session utilisateur introuvable');
+    }
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/api/me'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'name': name,
+        'phone': phone,
+        'email': email,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return data;
+    }
+
+    throw Exception(
+      data['error'] ?? 'Impossible de modifier votre profil',
     );
   }
 
