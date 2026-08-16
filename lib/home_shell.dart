@@ -528,7 +528,7 @@ OutlinedButton.icon(
 
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
-        builder: (_) => const AuthPage(),
+        builder: (_) => AuthPage(),
       ),
       (route) => false,
     );
