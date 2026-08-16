@@ -966,7 +966,6 @@ class _MerchantPageState
     stockController.dispose();
     descriptionController.dispose();
   }
-}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
