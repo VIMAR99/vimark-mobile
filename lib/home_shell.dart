@@ -11,13 +11,18 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int currentIndex = 0;
 
-  final pages = const [
-    HomePage(),
-    CoursesPage(),
-    ProductsPage(),
-    ProfilePage(),
-  ];
-
+  final pages = [
+  HomePage(
+    onNavigate: (index) {
+      setState(() {
+        currentIndex = index;
+      });
+    },
+  ),
+  const CoursesPage(),
+  const ProductsPage(),
+  const ProfilePage(),
+];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
