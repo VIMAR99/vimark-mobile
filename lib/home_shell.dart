@@ -62,7 +62,12 @@ class _HomeShellState extends State<HomeShell> {
 }
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  final Function(int) onNavigate;
+
+  const HomePage({
+    super.key,
+    required this.onNavigate,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -97,21 +102,23 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 28),
 
             Card(
-              child: ListTile(
-                leading: const CircleAvatar(
-                  child: Icon(Icons.storefront),
-                ),
-                title: const Text(
-                  'Marketplace',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                subtitle: const Text(
-                  'Découvrez les produits disponibles.',
-                ),
-              ),
-            ),
+  child: ListTile(
+    onTap: () => onNavigate(2),
+    leading: const CircleAvatar(
+      child: Icon(Icons.storefront),
+    ),
+    title: const Text(
+      'Marketplace',
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    subtitle: const Text(
+      'Découvrez les produits disponibles.',
+    ),
+    trailing: const Icon(Icons.chevron_right),
+  ),
+),
 
             const SizedBox(height: 12),
 
