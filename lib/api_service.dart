@@ -184,9 +184,40 @@ class ApiService {
   throw Exception(
     data['error'] ??
         'Impossible de créer le paiement FedaPay',
-  );
+    );
+  }
+  
+  static Future<Map<String, dynamic>> verifyFedaPayPayment(
+  dynamic transactionId,
+) async {
+  final token = await getToken();
+
+  if (token == null || token.isEmpty) {
+    throw Exception(
+      'Session utilisateur introuvable',
+    );
   }
 
+  final response = await http.get(
+    Uri.parse(
+      '$baseUrl/api/payments/fedapay/$transactionId',
+    ),
+    headers: {
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode == 200) {
+    return data;
+  }
+
+  throw Exception(
+    data['error'] ??
+        'Impossible de vérifier le paiement FedaPay',
+  );
+}
   // =========================
   // UPDATE PROFILE
   // =========================
