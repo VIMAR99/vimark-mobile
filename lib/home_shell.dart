@@ -630,61 +630,154 @@ SizedBox(
   child: ElevatedButton.icon(
     onPressed: () async {
       try {
-        await ApiService.createSubscription();
+class PremiumPage extends StatelessWidget {
+  const PremiumPage({super.key});
 
-        if (!context.mounted) return;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('VIMARK Premium'),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 20),
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Félicitations ! Votre abonnement Premium est activé.',
+            const CircleAvatar(
+              radius: 45,
+              child: Icon(
+                Icons.star,
+                size: 50,
+              ),
             ),
-          ),
-        );
-      } catch (e) {
-        if (!context.mounted) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur : $e'),
-          ),
-        );
-      }
-    },
-    icon: const Icon(Icons.star),
-    label: const Text('Devenir Premium'),
-  ),
-),
+            const SizedBox(height: 20),
 
-const SizedBox(height: 12),
+            const Text(
+              'VIMARK Premium ⭐',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
 
-OutlinedButton.icon(
-  onPressed: () async {
-    try {
-      final result =
-          await ApiService.createFedaPayPayment();
+            const SizedBox(height: 12),
 
-      if (!context.mounted) return;
+            const Text(
+              'Profitez de tous les avantages VIMARK Premium.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+              ),
+            ),
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Transaction FedaPay créée avec succès 🟢',
-          ),
+            const SizedBox(height: 30),
+
+            const Card(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: Icon(Icons.check_circle),
+                      title: Text('Accès aux contenus Premium'),
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.check_circle),
+                      title: Text('Expérience sans publicité'),
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.check_circle),
+                      title: Text('Avantages exclusifs'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            const Text(
+              '1 500 FCFA / mois',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  try {
+                    await ApiService.createSubscription();
+
+                    if (!context.mounted) return;
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Félicitations ! Votre abonnement Premium est activé.',
+                        ),
+                      ),
+                    );
+                  } catch (e) {
+                    if (!context.mounted) return;
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Erreur : $e'),
+                      ),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.star),
+                label: const Text('Devenir Premium'),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            OutlinedButton.icon(
+              onPressed: () async {
+                try {
+                  final result =
+                      await ApiService.createFedaPayPayment();
+
+                  if (!context.mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Transaction FedaPay créée avec succès 🟢',
+                      ),
+                    ),
+                  );
+
+                  debugPrint('FEDAPAY RESULT: $result');
+                } catch (e) {
+                  if (!context.mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Erreur FedaPay : $e'),
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.payment),
+              label: const Text('Tester FedaPay'),
+            ),
+          ],
         ),
-      );
-
-      debugPrint('FEDAPAY RESULT: $result');
-    } catch (e) {
-      if (!context.mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur FedaPay : $e'),
-        ),
-      );
-    }
-  },
-  icon: const Icon(Icons.payment),
-  label: const Text('Tester FedaPay'),
-),
+      ),
+    );
+  }
+}
