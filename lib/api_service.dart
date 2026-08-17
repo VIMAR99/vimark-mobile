@@ -150,6 +150,41 @@ class ApiService {
           'Impossible de récupérer votre profil',
     );
   }
+  static Future<Map<String, dynamic>> createFedaPayPayment({
+  int amount = 1500,
+  String description = 'VIMARK Premium',
+}) async {
+  final token = await getToken();
+
+  if (token == null || token.isEmpty) {
+    throw Exception(
+      'Session utilisateur introuvable',
+    );
+  }
+
+  final response = await http.post(
+    Uri.parse('$baseUrl/api/payments/fedapay'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+    body: jsonEncode({
+      'amount': amount,
+      'description': description,
+    }),
+  );
+
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode == 201) {
+    return data;
+  }
+
+  throw Exception(
+    data['error'] ??
+        'Impossible de créer le paiement FedaPay',
+  );
+  }
 
   // =========================
   // UPDATE PROFILE
