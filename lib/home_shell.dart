@@ -625,39 +625,66 @@ class PremiumPage extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () async {
-  try {
-    await ApiService.createSubscription();
+SizedBox(
+  width: double.infinity,
+  child: ElevatedButton.icon(
+    onPressed: () async {
+      try {
+        await ApiService.createSubscription();
 
-    if (!context.mounted) return;
+        if (!context.mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Félicitations ! Votre abonnement Premium est activé.',
-        ),
-      ),
-    );
-  } catch (e) {
-    if (!context.mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Erreur : $e'),
-      ),
-    );
-  }
-},
-                icon: const Icon(Icons.star),
-                label: const Text('Devenir Premium'),
-              ),
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Félicitations ! Votre abonnement Premium est activé.',
             ),
-          ],
+          ),
+        );
+      } catch (e) {
+        if (!context.mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur : $e'),
+          ),
+        );
+      }
+    },
+    icon: const Icon(Icons.star),
+    label: const Text('Devenir Premium'),
+  ),
+),
+
+const SizedBox(height: 12),
+
+OutlinedButton.icon(
+  onPressed: () async {
+    try {
+      final result =
+          await ApiService.createFedaPayPayment();
+
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Transaction FedaPay créée avec succès 🟢',
+          ),
         ),
-      ),
-    );
-  }
-}
+      );
+
+      debugPrint('FEDAPAY RESULT: $result');
+    } catch (e) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur FedaPay : $e'),
+        ),
+      );
+    }
+  },
+  icon: const Icon(Icons.payment),
+  label: const Text('Tester FedaPay'),
+),
