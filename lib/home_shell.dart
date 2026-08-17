@@ -661,31 +661,40 @@ const SizedBox(height: 12),
 
 OutlinedButton.icon(
   onPressed: () async {
-    try {
-      final result =
-          await ApiService.createFedaPayPayment();
+  try {
+    final result =
+        await ApiService.createFedaPayPayment();
 
-      if (!context.mounted) return;
+    final url = result['url'];
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Transaction FedaPay créée avec succès 🟢',
-          ),
-        ),
-      );
-
-      debugPrint('FEDAPAY RESULT: $result');
-    } catch (e) {
-      if (!context.mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur FedaPay : $e'),
-        ),
+    if (url == null || url.toString().isEmpty) {
+      throw Exception(
+        'URL de paiement FedaPay introuvable',
       );
     }
-  },
+
+    final uri = Uri.parse(url.toString());
+
+    final opened = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+
+    if (!opened) {
+      throw Exception(
+        'Impossible d’ouvrir la page FedaPay',
+      );
+    }
+  } catch (e) {
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Erreur FedaPay : $e'),
+      ),
+    );
+  }
+},
   icon: const Icon(Icons.payment),
   label: const Text('Tester FedaPay'),
 ),
