@@ -150,6 +150,7 @@ class ApiService {
           'Impossible de récupérer votre profil',
     );
   }
+  
   static Future<Map<String, dynamic>> createFedaPayPayment({
   int amount = 1500,
   String description = 'VIMARK Premium',
