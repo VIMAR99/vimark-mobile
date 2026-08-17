@@ -665,6 +665,9 @@ OutlinedButton.icon(
     final result =
         await ApiService.createFedaPayPayment();
 
+    final transaction = result['transaction'];
+final transactionId = transaction['id'];
+
     final url = result['url'];
 
     if (url == null || url.toString().isEmpty) {
