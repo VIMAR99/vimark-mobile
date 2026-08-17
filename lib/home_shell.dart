@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'auth_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
