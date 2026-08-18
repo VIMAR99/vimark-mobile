@@ -150,74 +150,83 @@ class ApiService {
           'Impossible de récupérer votre profil',
     );
   }
-  
+
+  // =========================
+  // FEDAPAY - CREATE PAYMENT
+  // =========================
+
   static Future<Map<String, dynamic>> createFedaPayPayment({
-  int amount = 1500,
-  String description = 'VIMARK Premium',
-}) async {
-  final token = await getToken();
+    int amount = 1500,
+    String description = 'VIMARK Premium',
+  }) async {
+    final token = await getToken();
 
-  if (token == null || token.isEmpty) {
+    if (token == null || token.isEmpty) {
+      throw Exception(
+        'Session utilisateur introuvable',
+      );
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/payments/fedapay'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'amount': amount,
+        'description': description,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 201) {
+      return data;
+    }
+
     throw Exception(
-      'Session utilisateur introuvable',
+      data['error'] ??
+          'Impossible de créer le paiement FedaPay',
     );
   }
 
-  final response = await http.post(
-    Uri.parse('$baseUrl/api/payments/fedapay'),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    },
-    body: jsonEncode({
-      'amount': amount,
-      'description': description,
-    }),
-  );
+  // =========================
+  // FEDAPAY - VERIFY PAYMENT
+  // =========================
 
-  final data = jsonDecode(response.body);
-
-  if (response.statusCode == 201) {
-    return data;
-  }
-
-  throw Exception(
-    data['error'] ??
-        'Impossible de créer le paiement FedaPay',
-    );
-  }
-  
   static Future<Map<String, dynamic>> verifyFedaPayPayment(
-  dynamic transactionId,
-) async {
-  final token = await getToken();
+    dynamic transactionId,
+  ) async {
+    final token = await getToken();
 
-  if (token == null || token.isEmpty) {
+    if (token == null || token.isEmpty) {
+      throw Exception(
+        'Session utilisateur introuvable',
+      );
+    }
+
+    final response = await http.get(
+      Uri.parse(
+        '$baseUrl/api/payments/fedapay/$transactionId',
+      ),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return data;
+    }
+
     throw Exception(
-      'Session utilisateur introuvable',
+      data['error'] ??
+          'Impossible de vérifier le paiement FedaPay',
     );
   }
 
-  final response = await http.get(
-    Uri.parse(
-      '$baseUrl/api/payments/fedapay/$transactionId',
-    ),
-    headers: {
-      'Authorization': 'Bearer $token',
-    },
-  );
-
-  final data = jsonDecode(response.body);
-
-  if (response.statusCode == 200) {
-    return data;
-  }
-
-  throw Exception(
-    data['error'] ??
-        'Impossible de vérifier le paiement FedaPay',
-  );
-}
   // =========================
   // UPDATE PROFILE
   // =========================
@@ -531,8 +540,7 @@ class ApiService {
           'Impossible de modifier le produit',
     );
   }
-
-  // =========================
+    // =========================
   // PRODUCT - DELETE
   // =========================
 
