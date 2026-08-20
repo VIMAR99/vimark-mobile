@@ -35,12 +35,14 @@ Future<void> checkSession() async {
 
   final nameController = TextEditingController();
   final identifierController = TextEditingController();
+  final phoneController = TextEditingController();
   final passwordController = TextEditingController();
 
   @override
   void dispose() {
     nameController.dispose();
     identifierController.dispose();
+    phoneController.dispose();
     passwordController.dispose();
     super.dispose();
   }
@@ -70,6 +72,7 @@ Future<void> checkSession() async {
       } else {
         result = await ApiService.register(
           name: nameController.text.trim(),
+          phone: phoneController.text.trim(),
           email: identifierController.text.trim(),
           password: passwordController.text,
         );
@@ -169,6 +172,16 @@ Future<void> checkSession() async {
                   border: OutlineInputBorder(),
                 ),
               ),
+              
+              TextField(
+                  controller: phoneController,
+                    keyboardType: TextInputType.phone,
+                      decoration: InputDecoration(
+                          labelText: 'Téléphone',
+                              prefixIcon: Icon(Icons.phone_outlined),
+                                ),
+                                ),
+              )
 
               const SizedBox(height: 16),
 
