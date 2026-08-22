@@ -179,9 +179,8 @@ Future<void> checkSession() async {
                       decoration: InputDecoration(
                           labelText: 'Téléphone',
                               prefixIcon: Icon(Icons.phone_outlined),
-                                ),
-                                ),
-              )
+                              ),
+                              ),
 
               const SizedBox(height: 16),
 
