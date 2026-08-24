@@ -17,7 +17,7 @@ jobs:
           channel: stable
 
        git add .github/workflows/build-apk.yml
-       git commit -m "Use existing Android project"
+       git commit -m "Fix workflow YAML syntax"
        git push
 
       - name: Add Internet permission
