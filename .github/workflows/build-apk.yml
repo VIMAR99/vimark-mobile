@@ -17,7 +17,7 @@ jobs:
           channel: stable
 
        git add .github/workflows/build-apk.yml
-       git commit -m "Fix workflow YAML syntax"
+       git commit -m "Fix workflow identification"
        git push
 
       - name: Add Internet permission
