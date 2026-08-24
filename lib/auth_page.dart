@@ -37,6 +37,8 @@ Future<void> checkSession() async {
   final identifierController = TextEditingController();
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
+  
+  String selectedRole = 'student';
 
   @override
   void dispose() {
@@ -75,6 +77,7 @@ Future<void> checkSession() async {
           phone: phoneController.text.trim(),
           email: identifierController.text.trim(),
           password: passwordController.text,
+          role: selectedRole,
         );
       }
 
@@ -181,6 +184,40 @@ Future<void> checkSession() async {
                               prefixIcon: Icon(Icons.phone_outlined),
                               ),
                               ),
+              
+              if (!isLogin) ...[
+  const SizedBox(height: 16),
+
+  DropdownButtonFormField<String>(
+    value: selectedRole,
+    decoration: const InputDecoration(
+      labelText: 'Rôle',
+      prefixIcon: Icon(Icons.person_outline),
+      border: OutlineInputBorder(),
+    ),
+    items: const [
+      DropdownMenuItem(
+        value: 'student',
+        child: Text('Étudiant'),
+      ),
+      DropdownMenuItem(
+        value: 'merchant',
+        child: Text('Marchand'),
+      ),
+      DropdownMenuItem(
+        value: 'teacher',
+        child: Text('Enseignant'),
+      ),
+    ],
+    onChanged: (value) {
+      if (value != null) {
+        setState(() {
+          selectedRole = value;
+        });
+      }
+    },
+  ),
+],
 
               const SizedBox(height: 16),
 
