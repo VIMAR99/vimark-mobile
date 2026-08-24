@@ -16,9 +16,8 @@ jobs:
         with:
           channel: stable
           
-       git add .github/workflows/build-apk.yml
-       git commit -m "Use existing Android project"
-       git push
+      - name: Create Android project
+        run: flutter create --platforms=android .
 
       - name: Add Internet permission
         run: |
