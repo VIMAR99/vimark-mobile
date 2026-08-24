@@ -15,9 +15,10 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          
-      - name: Create Android project
-        run: flutter create --platforms=android .
+
+       git add .github/workflows/build-apk.yml
+       git commit -m "Use existing Android project"
+       git push
 
       - name: Add Internet permission
         run: |
